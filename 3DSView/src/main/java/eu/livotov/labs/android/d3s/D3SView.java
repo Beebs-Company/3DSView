@@ -105,6 +105,8 @@ public class D3SView extends WebView {
 
                 if (!isPostbackUrl(url)) {
                     view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                } else {
+
                 }
 
                 super.onPageCommitVisible(view, url);
@@ -118,7 +120,7 @@ public class D3SView extends WebView {
             }
 
             private boolean isPostbackUrl(String url) {
-                return url.toLowerCase().startsWith(postbackUrl.toLowerCase());
+                return url.toLowerCase().replace("www.", "").startsWith(postbackUrl.toLowerCase());
             }
 
         });
