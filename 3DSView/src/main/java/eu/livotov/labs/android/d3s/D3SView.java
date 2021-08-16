@@ -106,7 +106,9 @@ public class D3SView extends WebView {
                 if (!isPostbackUrl(url)) {
                     view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                 } else {
-
+                    if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
+                        authorizationListener.onAuthorizationCompleted3dsV2("cRes", "threeDSSessionData");
+                    }
                 }
 
                 super.onPageCommitVisible(view, url);
