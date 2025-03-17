@@ -260,21 +260,26 @@ public class D3SView extends WebView {
             this.postbackUrl = postbackUrl;
         }
 
-        String postParams;
+        String urlParams;
+        String fullUrl;
         try {
             if (creq != null) {
                 // 3-D Secure v2
                 is3dsV2 = true;
-                postParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
+                urlParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
             } else {
                 // 3-D Secure v1
-                postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
+                urlParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
             }
+            
+            // Construct the full URL with query parameters for GET request
+            fullUrl = acsUrl + (acsUrl.contains("?") ? "&" : "?") + urlParams;
+            
+            // Load the URL directly instead of using POST
+            loadUrl(fullUrl);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-
-        postUrl(acsUrl, postParams.getBytes());
     }
 
     class D3SJSInterface {
