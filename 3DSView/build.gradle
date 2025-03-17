@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 30
@@ -25,4 +26,76 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'com.google.truth:truth:1.1'
+}
+
+// Load version from maven.properties
+def getVersionName = { ->
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('maven.properties').newDataInputStream())
+    return properties.getProperty("maven.version")
+}
+
+// Tasks for creating source/javadoc jars
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    archiveClassifier.set('sources')
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    failOnError false
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    archiveClassifier.set('javadoc')
+}
+
+// Configure maven publishing
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                // Add sources and javadoc artifacts
+                artifact sourcesJar
+                artifact javadocJar
+
+                // Load details from maven.properties
+                Properties properties = new Properties()
+                properties.load(project.rootProject.file('maven.properties').newDataInputStream())
+                
+                groupId properties.getProperty("maven.group")
+                artifactId properties.getProperty("maven.artifact") 
+                version getVersionName()
+
+                pom {
+                    name = properties.getProperty("maven.name")
+                    description = properties.getProperty("maven.info")
+                    url = properties.getProperty("maven.url.home")
+                    
+                    licenses {
+                        license {
+                            name = properties.getProperty("maven.license.name")
+                            url = properties.getProperty("maven.license.url")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = properties.getProperty("maven.developer.id")
+                            name = properties.getProperty("maven.developer.name")
+                            email = properties.getProperty("maven.developer.email")
+                        }
+                    }
+                    scm {
+                        connection = properties.getProperty("maven.url.vcs")
+                        developerConnection = properties.getProperty("maven.url.vcs")
+                        url = properties.getProperty("maven.url.home")
+                    }
+                }
+            }
+        }
+    }
 }
